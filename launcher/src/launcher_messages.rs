@@ -141,7 +141,7 @@ impl Launcher {
                         }
                     }
                 }
-                Msg::Session(session) => self.handle_game_session(session),
+                Msg::ClientReady => self.start_prepared_client(),
                 Msg::PlayStep(step) => {
                     if let Some(line) = self.play_step.said(self.starting_client.is_some(), step) {
                         console_page::keep_line(

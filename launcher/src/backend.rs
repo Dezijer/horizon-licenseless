@@ -3327,9 +3327,7 @@ pub fn play_step(step: &str) {
     eprintln!("Horizon: Play: {step}…");
 }
 
-/// The client's command, once the owner gate lets it start and its resources are prepared. Past
-/// the gate, a sign-in that can't be renewed (no network, expired) still lets the game start,
-/// offline.
+/// The offline Horizon client's command, once its resources are prepared.
 pub fn client(tag: &str) -> Result<Command, String> {
     client_as(tag, None)
 }

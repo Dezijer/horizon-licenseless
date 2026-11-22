@@ -768,8 +768,7 @@ enum Cmd {
         /// --server-thread
         #[arg(long = "arg", value_name = "ARG", allow_hyphen_values = true)]
         arg: Vec<String>,
-        /// Play this launch as this signed-in account (its name or UUID), without changing
-        /// the one `account select` picked: several games can play as several accounts at once
+        /// Legacy option. This fork launches Horizon offline.
         #[arg(long, value_name = "WHO")]
         account: Option<String>,
     },
@@ -1560,22 +1559,9 @@ fn execute(command: Cmd, as_json: bool) -> Result<i32, String> {
                 after_exit(&instance, &vars);
                 return played;
             }
-            // Who plays this launch only.
-            let who = match account {
-                Some(who) => Some(
-                    Accounts::load()
-                        .find(&who)
-                        .ok_or_else(|| {
-                            format!("No signed-in account {who}. See `horizon-launcher account`.")
-                        })?
-                        .uuid
-                        .clone(),
-                ),
-                None => None,
-            };
             let mut cmd = backend::client_as(
                 &instance.resolve_version(version.as_deref())?,
-                who.as_deref(),
+                account.as_deref(),
             )?;
             instances::apply(&mut cmd, &instance)?;
             if let Some(code) = join {
@@ -2001,8 +1987,7 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
                 }));
             } else if accounts.accounts.is_empty() {
                 println!(
-                    "No Microsoft account signed in. Play needs one that owns Minecraft: Java \
-                     Edition: horizon-launcher account sign-in"
+                    "No Microsoft account signed in. Horizon plays offline."
                 );
             } else {
                 for a in &accounts.accounts {

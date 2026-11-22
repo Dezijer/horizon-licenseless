@@ -310,9 +310,7 @@ impl Launcher {
                         ("when", &last_played(when)),
                     ],
                 ),
-                // Signed out, the button says "Sign in to play": the line says the same.
-                None if self.owner == Some(false)
-                    && !horizon_launcher::developer_offline::selected() =>
+                None if i.java.is_some() && self.owner == Some(false) =>
                 {
                     tr("You haven't played this one yet. Sign in to start.").into()
                 }
@@ -633,10 +631,10 @@ impl Launcher {
                         })),
                 ),
             None => {
-                let owner = if horizon_launcher::developer_offline::selected() {
-                    Some(true)
-                } else {
+                let owner = if self.selected_instance().is_some_and(|i| i.java.is_some()) {
                     self.owner
+                } else {
+                    Some(true)
                 };
                 // `HORIZON_LAUNCHER_PREVIEW_OWNER=1`: Play as for an owner with the game's files
                 // ready, to drive Build and play in debug builds without a sign-in.

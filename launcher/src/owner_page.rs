@@ -1,16 +1,10 @@
-//! The owner gate in the window (`horizon_launcher::account::launch`): the screen that asks for a
-//! Microsoft account that owns Minecraft: Java Edition. It covers the launcher once for players
-//! without one (those who played offline before the gate), and again whenever Play is refused.
-//! The sign-in runs on it, code and all.
+//! The Microsoft sign-in screen for Minecraft: Java Edition instances.
 use super::*;
 
 impl Launcher {
-    /// Whether the screen covers the window: no owner, and either Play was refused or the player
-    /// hasn't read it yet. The data question comes first.
+    /// Show the screen when sign-in is requested. The data question comes first.
     pub(crate) fn asking_owner(&self) -> bool {
-        (!horizon_launcher::developer_offline::selected() || sign_in_preview())
-            && (self.owner == Some(false) || sign_in_preview())
-            && (self.owner_screen_open || !self.settings.owner_notice_seen || sign_in_preview())
+        (self.owner_screen_open || sign_in_preview())
             && !self.asking_consent()
             && self.opening.is_none()
     }

@@ -262,11 +262,7 @@ impl Launcher {
             }));
         match play_press(
             ready,
-            if horizon_launcher::developer_offline::selected() {
-                Some(true)
-            } else {
-                self.owner
-            },
+            if java { self.owner } else { Some(true) },
             self.preparing || running,
         ) {
             PlayPress::Nothing => play = disabled(play),

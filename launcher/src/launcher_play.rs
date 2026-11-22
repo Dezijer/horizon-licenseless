@@ -383,8 +383,7 @@ impl Launcher {
         }
     }
 
-    /// Starts the game: the session first (a network round trip when the token needs
-    /// renewing), then `drain` starts the process when it arrives.
+    /// Prepares an offline start, then `drain` starts the process.
     pub(crate) fn start_client(&mut self, tag: String, instance_id: Option<String>) {
         if !self.version_still_installed(&tag) {
             self.starting_pack = None;
@@ -414,9 +413,7 @@ impl Launcher {
         // A little earlier than the spawn: file times can be coarse.
         self.client_started =
             Some(std::time::SystemTime::now() - std::time::Duration::from_secs(2));
-        // What the resources lack (built-in packs, panorama, sounds) and the session (a network
-        // round trip when the token needs renewing) come first; `drain` starts the game when the
-        // session arrives.
+        // Complete the resources and update mods before starting the game.
         self.starting_client = Some(tag.clone());
         self.starting_instance = instance_id.clone();
         self.play_pressed = Some(Instant::now());
@@ -457,14 +454,8 @@ impl Launcher {
                     let _ = mods_tx.send(mods_page::Event::AutoUpdated(lines));
                 }
             }
-            say("reading the sign-in", tr("Reading the sign-in…"));
-            let session = if horizon_launcher::developer_offline::enabled(&tag) {
-                Ok(None)
-            } else {
-                account::session_for_game(&backend::game_home()).map(Some)
-            };
             say("starting the game", tr("Starting the game…"));
-            let _ = tx.send(Msg::Session(session));
+            let _ = tx.send(Msg::ClientReady);
         });
     }
 
