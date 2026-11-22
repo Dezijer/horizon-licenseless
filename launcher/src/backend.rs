@@ -1,7 +1,7 @@
 //! Everything that is not UI: GitHub, installs, resource preparation, the game's processes and
 //! updates. The GUI, the CLI and the MCP server all go through this module. Functions here
 //! block; the GUI runs them on threads and reads their messages.
-use crate::{account, mojang, sources};
+use crate::{mojang, sources};
 use horizon_platform::{prepare, prepared_files};
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -2142,114 +2142,13 @@ fn download_from_mojang(
         .map_err(|e| format!("\n  • Horizon tried to download {} from Mojang, but: {e}", pins.version))
 }
 
-/// Downloads Minecraft `id` (any version on Mojang's list, its version file's sha1 from it) into
-/// Horizon's own game folder in the official launcher's layout. Returns that folder.
-pub fn download_mojang_version(
-    id: &str,
-    manifest_sha1: &str,
-    log: &dyn Fn(String),
-) -> Result<PathBuf, String> {
-    let dir = data_dir().join("minecraft");
-    let fetch = crate::downloads::install_metadata;
-    let pins = sources::Pins::for_version(id, manifest_sha1);
-    download_from_mojang(&pins, &dir, &fetch, log)
-        .map_err(|e| e.trim_start_matches("\n  • ").to_string())?;
-    Ok(dir)
-}
-
-/// The command that starts a Java instance's Minecraft, for an account that owns the game: its
-/// version downloaded from Mojang the first time (then it starts offline too), the Java it needs
-/// (the instance's own, else one found here, else Mojang's, downloaded), and the game in the
-/// instance's folder. The caller wraps it (`launch::wrap`) and never logs it: it holds the token.
-/// A Java instance's game, ready to start; `server` (`host[:port]`) is joined once it has.
+/// Legacy Java profiles are preserved on disk, but this fork only runs Horizon.
 pub fn java_game(
-    instance: &crate::instances::Instance,
-    server: Option<&str>,
-    log: &dyn Fn(String),
+    _instance: &crate::instances::Instance,
+    _server: Option<&str>,
+    _log: &dyn Fn(String),
 ) -> Result<Command, String> {
-    let game = instance.java.as_ref().ok_or_else(|| {
-        format!(
-            "{} plays Horizon, not Minecraft: Java Edition",
-            instance.name
-        )
-    })?;
-    let player = account::java_player()?;
-    let minecraft = data_dir().join("minecraft");
-    let id = mojang::relative(&game.minecraft)?;
-    let natives = minecraft.join("natives").join(&id);
-    // Each version and loader profile is fetched once; it then starts offline too.
-    let downloaded = |id: &str| -> Result<PathBuf, String> {
-        Ok(minecraft
-            .join("versions")
-            .join(mojang::relative(id)?)
-            .join(".downloaded"))
-    };
-    let marker = downloaded(&game.minecraft)?;
-    if !marker.is_file() {
-        let listed = crate::minecraft_versions::load()?;
-        let version = listed.find(&game.minecraft)?;
-        download_mojang_version(&version.id, &version.sha1, log)?;
-        fs::write(&marker, "").map_err(|e| format!("{}: {e}", marker.display()))?;
-    }
-    // The Java the game needs, which also runs a loader's installer.
-    let file = |id: &str| -> Result<PathBuf, String> {
-        Ok(minecraft
-            .join("versions")
-            .join(mojang::relative(id)?)
-            .join(format!("{id}.json")))
-    };
-    let vanilla = crate::java_launch::read(&file(&game.minecraft)?)?;
-    let need = crate::java::Need::of(&crate::java_launch::resolve(vanilla, &minecraft)?);
-    let found = crate::java::pick(
-        &need,
-        game.home.as_deref(),
-        &crate::java::mojang_runtimes(&crate::java::runtimes_dir()),
-        &crate::java::installed(),
-    )?;
-    let runtime = match found {
-        Some(runtime) => runtime,
-        None => {
-            log(format!("Downloading Java {} from Mojang", need.major));
-            crate::java::install(&need, log)?
-        }
-    };
-    let mut start = game.minecraft.clone();
-    if let Some(loader) = &game.loader {
-        start = loader.kind.profile_id(&loader.version, &game.minecraft);
-        let marker = downloaded(&start)?;
-        if !marker.is_file() {
-            start = crate::loaders::install(
-                loader,
-                &game.minecraft,
-                &minecraft,
-                &runtime.java(),
-                &get_bytes,
-                log,
-            )?;
-            fs::write(downloaded(&start)?, "").map_err(|e| e.to_string())?;
-        }
-    }
-    let version =
-        crate::java_launch::resolve(crate::java_launch::read(&file(&start)?)?, &minecraft)?;
-    let jvm_args: Vec<String> = game.jvm_args.split_whitespace().map(String::from).collect();
-    fs::create_dir_all(&instance.home).map_err(|e| format!("{}: {e}", instance.home.display()))?;
-    crate::java_launch::command(
-        &version,
-        &crate::java_launch::Launch {
-            minecraft: &minecraft,
-            game_dir: &instance.home,
-            natives: &natives,
-            java: &runtime.java(),
-            memory_mb: game
-                .memory_mb
-                .unwrap_or(crate::instances::DEFAULT_MEMORY_MB),
-            jvm_args: &jvm_args,
-            player: &player,
-            os: crate::java_launch::os_name(),
-            window: game.window,
-            server,
-        },
-    )
+    Err(crate::i18n::tr("This fork only launches the offline Horizon client.").into())
 }
 
 /// The folder of the Microsoft Store's Minecraft Launcher (the one Windows offers, and the Xbox

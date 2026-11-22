@@ -1,27 +1,29 @@
 # Horizon Licenseless
 
-Форк [Horizon](https://github.com/horizon-rust/horizon) от [Dezijer](https://github.com/Dezijer). Лаунчер в этом форке загружает публичные файлы Minecraft Java Edition с серверов Mojang и запускает клиент Horizon без входа в аккаунт Microsoft.
+**[Скачать исходники офлайн-версии (ZIP)](https://github.com/Dezijer/horizon-licenseless/archive/refs/heads/download-without-sign-in.zip)** · [Открыть ветку офлайн-версии](https://github.com/Dezijer/horizon-licenseless/tree/download-without-sign-in)
 
-| Режим | Поддержка |
-| --- | --- |
-| Одиночная игра в Horizon | Без аккаунта Microsoft |
-| Сервер с `online-mode=false` | Подключение без сессии Microsoft |
-| Сервер с `online-mode=true` | Требует сессию Microsoft, которую лаунчер форка не передаёт |
-| Обычные инстансы Minecraft Java Edition | Используют прежний вход через Microsoft |
+Форк [Horizon](https://github.com/horizon-rust/horizon) от [Dezijer](https://github.com/Dezijer) для одиночной игры и серверов с `online-mode=false`. Ветка `download-without-sign-in` запускает клиент Horizon без аккаунта Microsoft. Серверы, которые требуют авторизацию Microsoft, отклонят подключение.
 
-Horizon проверяет контрольные суммы скачанных файлов. Игровые файлы Mojang загружаются при подготовке и не входят в этот репозиторий.
+## Сборка и первый запуск
 
-## Как запустить
-
-Готового установщика форка пока нет. Изменения для офлайн-запуска находятся в ветке [`download-without-sign-in`](https://github.com/Dezijer/horizon-licenseless/tree/download-without-sign-in). Установи Rust 1.95 или новее и собери лаунчер из этой ветки.
+Готового установщика форка пока нет. Скачай ZIP по ссылке выше и распакуй его или клонируй нужную ветку:
 
 ```bash
 git clone --branch download-without-sign-in https://github.com/Dezijer/horizon-licenseless.git
 cd horizon-licenseless
+```
+
+Установи Rust 1.95 или новее и выполни в папке проекта:
+
+```bash
 cargo build --release --locked --manifest-path launcher/Cargo.toml
 ```
 
-Запусти `launcher/target/release/horizon-launcher` (на Windows добавь `.exe`). Выбери сборку **Horizon** в разделе **Versions**, затем нажми **Download and prepare** или **Play**. Каталог версий по-прежнему использует релизы оригинального Horizon. Изменения офлайн-запуска находятся в собранном из этого форка лаунчере.
+1. Запусти `launcher/target/release/horizon-launcher` (на Windows — `horizon-launcher.exe`).
+2. В разделе **Versions** установи сборку **Horizon**.
+3. Нажми **Download and prepare**, затем **Play**. Лаунчер скачает необходимые файлы с серверов Mojang и сверит контрольные суммы.
+
+Каталог **Versions** использует сборки движка оригинального Horizon. Для запуска без аккаунта нужен лаунчер, собранный из ветки форка по инструкции выше. Файлы Mojang не входят в ZIP с исходниками.
 
 ## Многопоточность
 

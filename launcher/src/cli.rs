@@ -741,7 +741,7 @@ enum Cmd {
         #[arg(long)]
         version: Option<String>,
     },
-    /// Start the client (needs a signed-in Microsoft account that owns Minecraft: Java Edition)
+    /// Start the offline Horizon client.
     Play {
         /// Allow missing original Java asset/data jars to be downloaded from Modrinth
         #[arg(long)]
@@ -1526,38 +1526,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<i32, String> {
                 None => instances::selected(),
             };
             if instance.java.is_some() {
-                if version.is_some()
-                    || world.is_some()
-                    || join.is_some()
-                    || creative
-                    || account.is_some()
-                {
-                    return Err(format!(
-                        "{} plays Minecraft: Java Edition: --version, --world, --creative, \
-                         --join and --account are for Horizon instances.",
-                        instance.name
-                    ));
-                }
-                let server = server.map(|server| {
-                    let list = server_list::List::load(&instance.home);
-                    server_list::find(&list, &server).map_or(server, |(_, s)| s.ip)
-                });
-                let mut cmd =
-                    backend::java_game(&instance, server.as_deref(), &|line| eprintln!("{line}"))?;
-                if let Some(e) = account::take_unsaved() {
-                    eprintln!("{e}");
-                }
-                cmd.args(arg);
-                let vars = instance.vars(cmd.get_program());
-                cmd.envs(vars.iter().map(|(k, v)| (k, v)));
-                let started = std::time::Instant::now();
-                let played =
-                    horizon_launcher::launch::wrap(cmd, &instance.launch).and_then(attached);
-                if let Err(e) = instances::record_play(&instance.id, started.elapsed()) {
-                    eprintln!("Play time not saved: {e}");
-                }
-                after_exit(&instance, &vars);
-                return played;
+                return Err(tr("This fork only launches the offline Horizon client.").into());
             }
             let mut cmd = backend::client_as(
                 &instance.resolve_version(version.as_deref())?,

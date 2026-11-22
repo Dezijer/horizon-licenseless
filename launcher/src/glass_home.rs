@@ -132,85 +132,17 @@ impl Launcher {
             ))
     }
 
-    /// The edition switch over the rail, in the top bar where Horizon's mark was: Horizon's mark
-    /// and the grass block on a segmented control whose lit pill slides to the selected
-    /// instance's edition. An instance's edition is chosen when it is made, so the other side
-    /// goes to an instance of that edition ([`Self::switch_edition`]).
-    pub(super) fn edition_switch(&mut self, cx: &mut Context<Self>) -> Stateful<Div> {
-        const ID: &str = "edition-switch";
-        let java = self.selected_instance().is_some_and(|i| i.java.is_some());
-        let horizon = self.horizon_mark(20.);
-        let grass = match self.grass_mark(20.) {
-            Some(image) => gpui::img(image)
-                .flex_none()
-                .size(px(20.))
-                .rounded(px(5.))
-                .into_any_element(),
-            None => div().into_any_element(),
-        };
-        let origin = ui::PillOrigin::default();
-        let mut seg = div()
-            .id(ID)
-            .relative()
+    /// The Horizon edition indicator over the instance rail.
+    pub(super) fn edition_switch(&mut self, _cx: &mut Context<Self>) -> Stateful<Div> {
+        div()
+            .id("edition-switch")
             .flex()
             .flex_none()
-            .gap(px(2.))
-            .p(px(3.))
-            .rounded(px(radius::LARGE))
-            .bg(white(0.04))
-            .border_1()
-            .border_color(white(ui::edge::REST))
-            .child(ui::pill_origin(&origin));
-        for (i, (label, mark)) in [
-            ("Horizon: your Horizon instances", horizon),
-            ("Java Edition: your Java instances", grass),
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            let on = (i == 1) == java;
-            let d = div()
-                .id(SharedString::from(format!("{ID}-{i}")))
-                .relative()
-                .flex()
-                .flex_none()
-                .items_center()
-                .justify_center()
-                .size(px(30.))
-                .rounded(px(radius::CONTROL - 1.))
-                .child(
-                    div()
-                        .relative()
-                        .opacity(if on { 1. } else { 0.5 })
-                        .child(mark),
-                )
-                .child(ui::pill_probe(ID, i, origin.clone()))
-                .tooltip(ui::tip(tr(label)));
-            let d = if on {
-                d
-            } else {
-                d.cursor_pointer()
-                    .hover(|s| s.bg(white(fill::ROW_HOVER)))
-                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        this.switch_edition(i == 1, cx);
-                        this.go(Page::Play);
-                        cx.notify();
-                    }))
-            };
-            seg = seg.child(crate::keyboard(d, &self.theme));
-        }
-        let pill = ui::sliding_pill(ID, usize::from(java), || {
-            div()
-                .absolute()
-                .top(px(3.))
-                .bottom(px(3.))
-                .rounded(px(radius::CONTROL - 1.))
-                .border_1()
-                .border_color(ui::color(ui::look().accent).opacity(0.6))
-                .bg(ui::color(ui::look().accent).opacity(0.2))
-        });
-        // The pill first, so the marks are drawn over it.
-        seg.children(pill)
+            .items_center()
+            .justify_center()
+            .size(px(36.))
+            .child(self.horizon_mark(20.))
+            .tooltip(ui::tip(tr("Horizon: your Horizon instances")))
     }
 
     /// An edition tab's click: the instance of that edition (`java`) played last, or, with none,

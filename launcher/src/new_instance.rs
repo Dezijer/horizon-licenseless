@@ -236,16 +236,12 @@ impl Launcher {
         .detach();
     }
 
-    /// The tabs over a new instance's dialog: Horizon, Vanilla, Modded.
+    /// The offline fork creates Horizon instances.
     pub(super) fn kind_tabs(&self, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
         let now = self.instances.dialog.as_ref().map(|d| d.java.kind);
         div().flex().gap(px(4.)).children(
-            [
-                (NewKind::Horizon, "Horizon"),
-                (NewKind::Vanilla, "Vanilla"),
-                (NewKind::Modded, "Modded"),
-            ]
+            [(NewKind::Horizon, "Horizon")]
             .map(|(kind, label)| {
                 shell::tab(
                     format!("new-kind-{label}"),

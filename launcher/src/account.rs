@@ -24,7 +24,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 /// The keychain service name every secret is stored under.
 pub const SERVICE: &str = "dev.playhorizon.launcher";
 const SCOPE: &str = "XboxLive.signin offline_access";
-pub const NOT_CONFIGURED: &str = "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID), so it can't start the game.";
+pub const NOT_CONFIGURED: &str = "Microsoft sign-in is disabled in this offline Horizon launcher.";
 /// What every Play says while no account in the launcher owns the game.
 pub const NEEDS_OWNER: &str =
     "Sign in with a Microsoft account that owns Minecraft: Java Edition to play";
@@ -37,14 +37,9 @@ const SIGN_IN_AGAIN: &str = "Your Microsoft sign-in expired. Sign in again.";
 /// The Minecraft token is renewed when it has less than this left.
 const RENEW_BEFORE: u64 = 3600;
 
-/// The configured Azure app, if any: the run-time variable wins over the build-time one, and an
-/// empty value means none.
+/// This offline launcher does not use a Microsoft OAuth application.
 pub fn client_id() -> Option<String> {
-    std::env::var("HORIZON_MSA_CLIENT_ID")
-        .ok()
-        .or_else(|| option_env!("HORIZON_MSA_CLIENT_ID").map(str::to_owned))
-        .map(|id| id.trim().to_owned())
-        .filter(|id| !id.is_empty())
+    None
 }
 
 /// Where the requests go: the real services, or a mock in tests.

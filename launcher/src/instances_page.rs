@@ -106,7 +106,9 @@ impl Launcher {
             .as_deref()
             .unwrap_or(instances::DEFAULT);
         let list = &self.instances.list;
-        list.iter().find(|i| i.id == id).or(list.first())
+        list.iter()
+            .find(|i| i.java.is_none() && i.id == id)
+            .or_else(|| list.iter().find(|i| i.java.is_none()))
     }
 
     /// The installed version `instance` plays: its own, else the launcher's.
@@ -218,7 +220,13 @@ impl Launcher {
         let on_packs = self.page == Page::Mods && self.mods.on_modpacks();
         let mut out = Vec::new();
         let mut group = None;
-        for i in self.instances.list.clone() {
+        for i in self
+            .instances
+            .list
+            .clone()
+            .into_iter()
+            .filter(|i| i.java.is_none())
+        {
             if i.group != group {
                 group = i.group.clone();
                 if let Some(g) = &group {
