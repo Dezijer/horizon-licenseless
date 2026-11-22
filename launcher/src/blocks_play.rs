@@ -118,28 +118,17 @@ impl Launcher {
         let left = self.download_left();
         let steps = self.preparing.then(|| self.steps(&version, left));
 
-        // Not prepared: an owner can have Horizon download Minecraft from Mojang; without an
-        // owner there is nothing to play, so signing in comes first.
-        let first = (!prepared && !self.preparing)
-            .then_some(self.owner)
-            .flatten();
-        // No launcher folder with Minecraft on this computer: an owner needs none.
+        let first = !prepared && !self.preparing;
         let no_install = self.settings.minecraft_dir.is_none();
-        let resources_value = match first {
-            _ if self.preparing => tr("Preparing…").to_string(),
-            Some(true) if no_install => trf(
-                "Not prepared. Play downloads Minecraft {version} from Mojang for your account and prepares it.",
+        let resources_value = if self.preparing {
+            tr("Preparing…").to_string()
+        } else if first {
+            trf(
+                "Not prepared. Horizon can download Minecraft {version} from Mojang or use your existing installation.",
                 &[("version", &version)],
-            ),
-            Some(true) => trf(
-                "Not prepared. Horizon can download Minecraft {version} from Mojang for your account, or use your own install.",
-                &[("version", &version)],
-            ),
-            Some(false) => trf(
-                "Not prepared. Sign in with the Microsoft account that owns Minecraft {version} first.",
-                &[("version", &version)],
-            ),
-            None => backend::resources_summary(prepared, !silent, &version),
+            )
+        } else {
+            backend::resources_summary(prepared, !silent, &version)
         };
         let mut prepare = button(
             "prepare",
@@ -160,7 +149,7 @@ impl Launcher {
             }));
         }
         let prepare = match first {
-            Some(true) if no_install => div().child(
+            true if no_install => div().child(
                 button(
                     "prepare-download",
                     "Download and prepare",
@@ -172,7 +161,7 @@ impl Launcher {
                     cx.notify();
                 })),
             ),
-            Some(true) => div()
+            true => div()
                 .flex()
                 .gap(px(8.))
                 .child(
@@ -195,25 +184,10 @@ impl Launcher {
                         cx.notify();
                     })),
                 ),
-            Some(false) => div().child(microsoft::sign_in_button("prepare-sign-in", &t).on_click(
-                cx.listener(|this, _: &ClickEvent, _, cx| {
-                    this.sign_in_to_play();
-                    cx.notify();
-                }),
-            )),
-            None => div().child(prepare),
+            false => div().child(prepare),
         };
-        let owner = self.owner == Some(true);
         let minecraft = self.settings.minecraft_dir.as_deref().map_or_else(
-            || {
-                div()
-                    .child(if owner {
-                        tr("None needed: Horizon downloads Minecraft from Mojang for your account.")
-                    } else {
-                        tr("Not found. Choose the folder where your launcher keeps Minecraft.")
-                    })
-                    .into_any_element()
-            },
+            || div().child(tr("Not set")).into_any_element(),
             |p| {
                 div()
                     .font_family(theme::MONO)

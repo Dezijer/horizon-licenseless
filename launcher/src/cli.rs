@@ -734,8 +734,7 @@ enum Cmd {
         /// ATLauncher or GDLauncher (default: the launcher's, then every launcher's default)
         #[arg(long, conflicts_with = "download")]
         minecraft: Option<PathBuf>,
-        /// Download Minecraft from Mojang for the signed-in account that owns it, instead of
-        /// using an install
+        /// Download Minecraft from Mojang instead of using an install
         #[arg(long)]
         download: bool,
         /// The installed version (default: the selected one)
